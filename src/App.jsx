@@ -5,11 +5,10 @@ import {
   getTickets,
   createTicket,
   updateTickets,
-  deleteTicket
+  deleteTicket,
 } from "./api/ticketApi";
 
 import AppRoutes from "./routes/AppRoutes";
-
 import "./App.css";
 
 function App() {
@@ -17,36 +16,43 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // GET: Fetch all tickets
-  useEffect(() => {
-    const fetchTickets = async () => {
-      try {
-        const data = await getTickets();
-        setTickets(data);
-      } catch (err) {
-        console.error(err);
-        setError("Failed to load tickets.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Fetch tickets
+  const fetchTickets = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
+      const data = await getTickets();
+
+      setTickets(data);
+    } catch (err) {
+      console.error("Fetch tickets error:", err);
+
+      setError(
+        "Unable to load tickets. Please check your internet connection or try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchTickets();
   }, []);
 
-  // POST: Create ticket
+  // Create ticket
   const handleCreateTicket = async (ticketData) => {
     const newTicket = await createTicket(ticketData);
 
     setTickets((previousTickets) => [
       newTicket,
-      ...previousTickets
+      ...previousTickets,
     ]);
 
     return newTicket;
   };
 
-  // PATCH: Update ticket
+  // Update ticket
   const handleUpdateTicket = async (id, updates) => {
     const updatedTicket = await updateTickets(id, updates);
 
@@ -61,7 +67,7 @@ function App() {
     return updatedTicket;
   };
 
-  // DELETE: Delete ticket
+  // Delete ticket
   const handleDeleteTicket = async (id) => {
     await deleteTicket(id);
 
@@ -72,21 +78,34 @@ function App() {
     );
   };
 
-  if (loading) {
-    return <h2>Loading tickets...</h2>;
-  }
-
-  if (error) {
-    return <p>{error}</p>;
-  }
-
   return (
-    <AppRoutes
-      tickets={tickets}
-      onCreateTicket={handleCreateTicket}
-      onUpdateTicket={handleUpdateTicket}
-      onDeleteTicket={handleDeleteTicket}
-    />
+    <>
+      {/* Loading message */}
+      {loading && (
+        <div className="app-notice">
+          Loading tickets...
+        </div>
+      )}
+
+      {/* Error message */}
+      {!loading && error && (
+        <div className="app-error">
+          <p>{error}</p>
+
+          <button onClick={fetchTickets}>
+            Try Again
+          </button>
+        </div>
+      )}
+
+      {/* Application always renders */}
+      <AppRoutes
+        tickets={tickets}
+        onCreateTicket={handleCreateTicket}
+        onUpdateTicket={handleUpdateTicket}
+        onDeleteTicket={handleDeleteTicket}
+      />
+    </>
   );
 }
 

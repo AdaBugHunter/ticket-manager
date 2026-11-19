@@ -1,113 +1,105 @@
-const supabaseUrl =
-  import.meta.env.VITE_SUPABASE_URL;
 
-const supabaseKey =
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 
-const ticketsUrl =
-  `${supabaseUrl}/rest/v1/tickets`;
+const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+const ticketsUrl = `${supabaseUrl}/rest/v1/tickets`;
 
 const headers = {
   apikey: supabaseKey,
-  'Content-Type': 'application/json',
+  "Content-Type": "application/json",
 };
 
-//GET
+// Reusable error handler
+const handleResponse = async (response) => {
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+
+    console.error("Supabase API Error:", errorData);
+
+    throw new Error(
+      errorData?.message ||
+      errorData?.details ||
+      `Request failed with status ${response.status}`
+    );
+  }
+
+  if (response.status === 204) {
+    return null;
+  }
+
+  return response.json();
+};
+
+// GET
 export const getTickets = async () => {
   const response = await fetch(
     `${ticketsUrl}?select=*`,
     {
-      method: 'GET',
+      method: "GET",
       headers,
     }
   );
 
-  if (!response.ok) {
-    throw new Error(
-      'Failed to fetch tickets'
-    );
-  }
-
-  const data = await response.json();
-
-  return data;
+  return handleResponse(response);
 };
 
-//POST
-export const createTicket = async (ticketsData) => {
-  const response = await fetch(
-    ticketsUrl,
-    {
-      method: 'POST',
+// POST
+export const createTicket = async (ticketData) => {
+  const response = await fetch(ticketsUrl, {
+    method: "POST",
+    headers: {
+      ...headers,
+      Prefer: "return=representation",
+    },
+    body: JSON.stringify(ticketData),
+  });
 
-      headers: {
-        ...headers,
-        Prefer: 'return=representation',
-      },
+  const data = await handleResponse(response);
 
-      body: JSON.stringify(ticketsData),
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error(
-      'Failed to create ticket'
-    );
-  }
-
-  const data = await response.json();
-
-  return data[0];
+  return data?.[0];
 };
 
-//PATCH
-export const updateTickets = async (id,updates) => {
-  if (
-    !updates ||
-    Object.keys(updates).length === 0) 
-    { 
-    throw new Error(
-      'No ticket updates provided'
-    );
-}
+// PATCH
+export const updateTickets = async (id, updates) => {
+  if (!updates || Object.keys(updates).length === 0) {
+    throw new Error("No ticket updates provided");
+  }
 
   const response = await fetch(
-    `${ticketsUrl}?id=eq.${id}`,
+    `${ticketsUrl}?id=eq.${encodeURIComponent(id)}`,
     {
-      method: 'PATCH',
+      method: "PATCH",
       headers: {
         ...headers,
-        Prefer: 'return=representation',
+        Prefer: "return=representation",
       },
       body: JSON.stringify(updates),
     }
   );
 
-  if (!response.ok) {
-    throw new Error(
-      'Failed to update ticket'
-    );
+  const data = await handleResponse(response);
+
+  if (!data?.[0]) {
+    throw new Error("Ticket was not updated or could not be returned.");
   }
-  
-  const data = await response.json();
+
   return data[0];
 };
 
-//DELETE
+// DELETE
 export const deleteTicket = async (id) => {
   const response = await fetch(
-    `${ticketsUrl}?id=eq.${id}`,
+    `${ticketsUrl}?id=eq.${encodeURIComponent(id)}`,
     {
-      method: 'DELETE',
+      method: "DELETE",
       headers,
     }
   );
 
-  if (!response.ok) {
-    throw new Error(
-      'Failed to delete ticket'
-    );
-  }
+  await handleResponse(response);
 
   return true;
 };
+console.log("Supabase URL:", supabaseUrl);
+console.log("Tickets URL:", ticketsUrl);
