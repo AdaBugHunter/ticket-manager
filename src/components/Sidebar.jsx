@@ -6,7 +6,7 @@ function Sidebar() {
     <aside className="sidebar">
 
       <div className="sidebar-logo">
-        <div className="logo-icon">T</div>
+        <div className="logo-icon"></div>
         <h3>Ticket Manager</h3>
       </div>
 
@@ -27,7 +27,7 @@ function Sidebar() {
       </nav>
 
       <div className="sidebar-user">
-        <div className="user-avatar">A</div>
+        <div className="user-avatar"></div>
         <span>Areeba Ali</span>
       </div>
 

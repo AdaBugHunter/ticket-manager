@@ -1,7 +1,9 @@
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey =
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim();
 
-const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const baseUrl = supabaseUrl?.replace(/\/+$/, "");
 
 const ticketsUrl = `${supabaseUrl}/rest/v1/tickets`;
 
@@ -45,13 +47,16 @@ export const getTickets = async () => {
 };
 
 // POST
+
 export const createTicket = async (ticketData) => {
   const response = await fetch(ticketsUrl, {
     method: "POST",
+
     headers: {
       ...headers,
       Prefer: "return=representation",
     },
+
     body: JSON.stringify(ticketData),
   });
 
@@ -59,6 +64,7 @@ export const createTicket = async (ticketData) => {
 
   return data?.[0];
 };
+
 
 // PATCH
 export const updateTickets = async (id, updates) => {
@@ -101,5 +107,3 @@ export const deleteTicket = async (id) => {
 
   return true;
 };
-console.log("Supabase URL:", supabaseUrl);
-console.log("Tickets URL:", ticketsUrl);
