@@ -1,122 +1,112 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+
+import { useEffect, useState } from "react";
+
+import {
+  getTickets,
+  createTicket,
+  updateTickets,
+  deleteTicket,
+} from "./api/ticketApi";
+
+import AppRoutes from "./routes/AppRoutes";
+import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // Fetch tickets
+  const fetchTickets = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await getTickets();
+
+      setTickets(data);
+    } catch (err) {
+      console.error("Fetch tickets error:", err);
+
+      setError(
+        "Unable to load tickets. Please check your internet connection or try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTickets();
+  }, []);
+
+  // Create ticket
+  const handleCreateTicket = async (ticketData) => {
+    const newTicket = await createTicket(ticketData);
+
+    setTickets((previousTickets) => [
+      newTicket,
+      ...previousTickets,
+    ]);
+
+    return newTicket;
+  };
+
+  // Update ticket
+  const handleUpdateTicket = async (id, updates) => {
+    const updatedTicket = await updateTickets(id, updates);
+
+    setTickets((previousTickets) =>
+      previousTickets.map((ticket) =>
+        String(ticket.id) === String(id)
+          ? updatedTicket
+          : ticket
+      )
+    );
+
+    return updatedTicket;
+  };
+
+  // Delete ticket
+  const handleDeleteTicket = async (id) => {
+    await deleteTicket(id);
+
+    setTickets((previousTickets) =>
+      previousTickets.filter(
+        (ticket) => String(ticket.id) !== String(id)
+      )
+    );
+  };
 
   return (
     <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+      {/* Loading message */}
+      {loading && (
+        <div className="app-notice">
+          Loading tickets...
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      )}
 
-      <div className="ticks"></div>
+      {/* Error message */}
+      {!loading && error && (
+        <div className="app-error">
+          <p>{error}</p>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+          <button onClick={fetchTickets}>
+            Try Again
+          </button>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      )}
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
+      {/* Application always renders */}
+      <AppRoutes
+        tickets={tickets}
+        onCreateTicket={handleCreateTicket}
+        onUpdateTicket={handleUpdateTicket}
+        onDeleteTicket={handleDeleteTicket}
+      />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
